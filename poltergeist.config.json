@@ -1,9 +1,9 @@
 {
   "version": "1.0",
-  "projectType": "multi-platform",
+  "projectType": "swift",
   "targets": [
     {
-      "name": "vibetunnel-mac",
+      "name": "vibetunnel",
       "type": "app-bundle",
       "enabled": true,
       "buildCommand": "cd mac && ./scripts/build.sh --configuration Debug",
@@ -19,27 +19,6 @@
       "debounceInterval": 3000,
       "environment": {
         "CONFIGURATION": "Debug"
-      }
-    },
-    {
-      "name": "vibetunnel-web",
-      "type": "executable",
-      "enabled": true,
-      "buildCommand": "cd web && pnpm run build",
-      "outputPath": "./web/dist/server/server.js",
-      "watchPaths": [
-        "web/src/**/*.ts",
-        "web/src/**/*.js",
-        "web/src/**/*.css",
-        "web/src/**/*.html",
-        "web/package.json",
-        "web/tsconfig.json",
-        "web/vite.config.ts"
-      ],
-      "settlingDelay": 1000,
-      "debounceInterval": 2000,
-      "environment": {
-        "NODE_ENV": "development"
       }
     },
     {
@@ -72,7 +51,7 @@
       ".next",
       "out"
     ],
-    "projectType": "multi-platform",
+    "projectType": "swift",
     "maxFileEvents": 10000,
     "recrawlThreshold": 5,
     "settlingDelay": 1000

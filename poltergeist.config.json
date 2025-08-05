@@ -6,6 +6,46 @@
       "name": "vibetunnel",
       "type": "app-bundle",
       "enabled": true,
+      "buildCommand": "cd . && xcodebuild -project VibeTunnel.xcworkspace -scheme VibeTunnel -configuration Debug build",
+      "outputPath": "././build/Debug/VibeTunnel.app",
+      "bundleId": "sh.vibetunnel.vibetunnel",
+      "watchPaths": [
+        "./**/*.swift",
+        "./**/*.xcodeproj/**",
+        "./**/*.xcconfig",
+        "./**/*.entitlements",
+        "./**/*.plist"
+      ],
+      "settlingDelay": 1500,
+      "debounceInterval": 3000,
+      "environment": {
+        "CONFIGURATION": "Debug"
+      }
+    },
+    {
+      "name": "vibetunnel-ios",
+      "type": "app-bundle",
+      "enabled": false,
+      "buildCommand": "cd ios && xcodebuild -project VibeTunnel-iOS.xcodeproj -scheme VibeTunnel-iOS -configuration Debug build",
+      "outputPath": "./ios/build/Debug/VibeTunnel-iOS.app",
+      "bundleId": "sh.vibetunnel.vibetunnel.ios",
+      "watchPaths": [
+        "ios/**/*.swift",
+        "ios/**/*.xcodeproj/**",
+        "ios/**/*.xcconfig",
+        "ios/**/*.entitlements",
+        "ios/**/*.plist"
+      ],
+      "settlingDelay": 1500,
+      "debounceInterval": 3000,
+      "environment": {
+        "CONFIGURATION": "Debug"
+      }
+    },
+    {
+      "name": "vibetunnel",
+      "type": "app-bundle",
+      "enabled": true,
       "buildCommand": "cd mac && ./scripts/build.sh --configuration Debug",
       "outputPath": "./mac/build/Debug/VibeTunnel.app",
       "bundleId": "sh.vibetunnel.vibetunnel",
@@ -21,23 +61,6 @@
       "environment": {
         "CONFIGURATION": "Debug"
       }
-    },
-    {
-      "name": "vibetunnel-ios",
-      "type": "app-bundle",
-      "enabled": false,
-      "buildCommand": "cd ios && xcodebuild -project VibeTunnel-iOS.xcodeproj -scheme VibeTunnel-iOS -sdk iphonesimulator build",
-      "outputPath": "./ios/build/Debug-iphonesimulator/VibeTunnel.app",
-      "bundleId": "sh.vibetunnel.vibetunnel.ios",
-      "watchPaths": [
-        "ios/**/*.swift",
-        "ios/**/*.xcodeproj/**",
-        "ios/**/*.xcconfig",
-        "ios/**/*.entitlements",
-        "ios/**/*.plist"
-      ],
-      "settlingDelay": 1500,
-      "debounceInterval": 3000
     }
   ],
   "watchman": {
@@ -47,11 +70,7 @@
       "dist",
       "build",
       "DerivedData",
-      ".git",
-      ".poltergeist",
-      "coverage",
-      ".next",
-      "out"
+      ".git"
     ],
     "projectType": "swift",
     "maxFileEvents": 10000,
@@ -64,7 +83,7 @@
       "enabled": true,
       "focusDetectionWindow": 300000,
       "priorityDecayTime": 1800000,
-      "buildTimeoutMultiplier": 2.0
+      "buildTimeoutMultiplier": 2
     }
   },
   "notifications": {
@@ -73,8 +92,7 @@
     "buildSuccess": true,
     "buildFailed": true,
     "successSound": "Glass",
-    "failureSound": "Basso",
-    "icon": "./mac/VibeTunnel/Assets.xcassets/AppIcon.appiconset/icon_128x128.png"
+    "failureSound": "Basso"
   },
   "performance": {
     "profile": "balanced",

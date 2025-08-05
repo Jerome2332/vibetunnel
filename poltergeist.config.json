@@ -5,8 +5,7 @@
     {
       "name": "vibetunnel",
       "type": "app-bundle",
-      "enabled": true,
-      "buildCommand": "cd . && xcodebuild -project VibeTunnel.xcworkspace -scheme VibeTunnel -configuration Debug build",
+      "buildCommand": "cd . && xcodebuild -workspace VibeTunnel.xcworkspace -scheme VibeTunnel -configuration Debug build",
       "outputPath": "././build/Debug/VibeTunnel.app",
       "bundleId": "sh.vibetunnel.vibetunnel",
       "watchPaths": [
@@ -15,17 +14,11 @@
         "./**/*.xcconfig",
         "./**/*.entitlements",
         "./**/*.plist"
-      ],
-      "settlingDelay": 1500,
-      "debounceInterval": 3000,
-      "environment": {
-        "CONFIGURATION": "Debug"
-      }
+      ]
     },
     {
       "name": "vibetunnel-ios",
       "type": "app-bundle",
-      "enabled": false,
       "buildCommand": "cd ios && xcodebuild -project VibeTunnel-iOS.xcodeproj -scheme VibeTunnel-iOS -configuration Debug build",
       "outputPath": "./ios/build/Debug/VibeTunnel-iOS.app",
       "bundleId": "sh.vibetunnel.vibetunnel.ios",
@@ -36,16 +29,11 @@
         "ios/**/*.entitlements",
         "ios/**/*.plist"
       ],
-      "settlingDelay": 1500,
-      "debounceInterval": 3000,
-      "environment": {
-        "CONFIGURATION": "Debug"
-      }
+      "enabled": false
     },
     {
-      "name": "vibetunnel",
+      "name": "vibetunnel-2",
       "type": "app-bundle",
-      "enabled": true,
       "buildCommand": "cd mac && ./scripts/build.sh --configuration Debug",
       "outputPath": "./mac/build/Debug/VibeTunnel.app",
       "bundleId": "sh.vibetunnel.vibetunnel",
@@ -55,55 +43,7 @@
         "mac/**/*.xcconfig",
         "mac/**/*.entitlements",
         "mac/**/*.plist"
-      ],
-      "settlingDelay": 1500,
-      "debounceInterval": 3000,
-      "environment": {
-        "CONFIGURATION": "Debug"
-      }
+      ]
     }
-  ],
-  "watchman": {
-    "useDefaultExclusions": true,
-    "excludeDirs": [
-      "node_modules",
-      "dist",
-      "build",
-      "DerivedData",
-      ".git"
-    ],
-    "projectType": "swift",
-    "maxFileEvents": 10000,
-    "recrawlThreshold": 5,
-    "settlingDelay": 1000
-  },
-  "buildScheduling": {
-    "parallelization": 2,
-    "prioritization": {
-      "enabled": true,
-      "focusDetectionWindow": 300000,
-      "priorityDecayTime": 1800000,
-      "buildTimeoutMultiplier": 2
-    }
-  },
-  "notifications": {
-    "enabled": true,
-    "buildStart": false,
-    "buildSuccess": true,
-    "buildFailed": true,
-    "successSound": "Glass",
-    "failureSound": "Basso"
-  },
-  "performance": {
-    "profile": "balanced",
-    "autoOptimize": true,
-    "metrics": {
-      "enabled": true,
-      "reportInterval": 300
-    }
-  },
-  "logging": {
-    "level": "info",
-    "file": ".poltergeist.log"
-  }
+  ]
 }

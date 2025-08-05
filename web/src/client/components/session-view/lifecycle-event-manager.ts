@@ -139,7 +139,7 @@ export class LifecycleEventManager extends ManagerEventEmitter {
 
     const event = e as CustomEvent;
     const preferences = event.detail as AppPreferences;
-    this.callbacks.setUseDirectKeyboard(preferences.useDirectKeyboard);
+    // Direct keyboard is now always enabled, no preference needed
 
     // Update touch keyboard preference if provided
     if (preferences.touchKeyboardPreference) {
@@ -152,15 +152,10 @@ export class LifecycleEventManager extends ManagerEventEmitter {
 
     // Update hidden input based on preference
     const isMobile = this.callbacks.getIsMobile();
-    const useDirectKeyboard = this.callbacks.getUseDirectKeyboard();
     const directKeyboardManager = this.callbacks.getDirectKeyboardManager();
 
-    if (isMobile && useDirectKeyboard && !directKeyboardManager.getShowQuickKeys()) {
+    if (isMobile && !directKeyboardManager.getShowQuickKeys()) {
       directKeyboardManager.ensureHiddenInputVisible();
-    } else if (!useDirectKeyboard) {
-      // Cleanup direct keyboard manager when disabled
-      directKeyboardManager.cleanup();
-      this.callbacks.setShowQuickKeys(false);
     }
   };
 
@@ -446,15 +441,10 @@ export class LifecycleEventManager extends ManagerEventEmitter {
         ) {
           logger.log('Keyboard dismissed detected via viewport change');
 
-          // Check if we're using direct keyboard mode
-          const useDirectKeyboard = this.callbacks.getUseDirectKeyboard();
+          // Check if we're on mobile
           const directKeyboardManager = this.callbacks.getDirectKeyboardManager();
 
-          if (
-            useDirectKeyboard &&
-            directKeyboardManager &&
-            directKeyboardManager.getShowQuickKeys()
-          ) {
+          if (directKeyboardManager?.getShowQuickKeys()) {
             // Check if we recently entered keyboard mode (within last 2 seconds)
             // This prevents iOS keyboard animation from being interrupted
             const isRecentlyEntered =

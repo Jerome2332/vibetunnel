@@ -121,6 +121,10 @@ export class BufferSubscriptionService {
   private initialized = false;
   private noAuthMode: boolean | null = null;
 
+  // Deduplication cache: sessionId -> recent message hashes
+  private messageCache = new Map<string, Set<string>>();
+  private readonly MAX_CACHE_SIZE = 20; // Keep last 20 message hashes per session
+
   // biome-ignore lint/complexity/noUselessConstructor: This constructor documents the intentional design decision to not auto-connect
   constructor() {
     // Do not connect automatically - wait for initialize() to be called
@@ -391,6 +395,12 @@ export class BufferSubscriptionService {
       // Remaining data is the buffer
       const bufferData = data.slice(offset);
 
+      // Check for duplicate
+      if (this.isDuplicate(sessionId, bufferData)) {
+        logger.debug(`Skipping duplicate buffer update for session ${sessionId}`);
+        return;
+      }
+
       // Import TerminalRenderer dynamically to avoid circular dependencies
       import('../utils/terminal-renderer.js')
         .then(({ TerminalRenderer }) => {
@@ -534,6 +544,49 @@ export class BufferSubscriptionService {
 
     this.subscriptions.clear();
     this.messageQueue = [];
+    this.messageCache.clear();
+  }
+
+  /**
+   * Generate a hash for buffer data to use for deduplication
+   */
+  private generateBufferHash(buffer: ArrayBuffer): string {
+    // Use a simple hash based on length and some sample bytes
+    const view = new Uint8Array(buffer);
+    const length = view.length;
+    const sample = Array.from(view.slice(0, Math.min(20, length)));
+    return `${length}-${sample.join(',')}`;
+  }
+
+  /**
+   * Check if a message is a duplicate
+   */
+  private isDuplicate(sessionId: string, buffer: ArrayBuffer): boolean {
+    const hash = this.generateBufferHash(buffer);
+
+    let sessionCache = this.messageCache.get(sessionId);
+    if (!sessionCache) {
+      sessionCache = new Set();
+      this.messageCache.set(sessionId, sessionCache);
+    }
+
+    if (sessionCache.has(hash)) {
+      return true;
+    }
+
+    // Add to cache
+    sessionCache.add(hash);
+
+    // Maintain cache size limit
+    if (sessionCache.size > this.MAX_CACHE_SIZE) {
+      const iterator = sessionCache.values();
+      const firstKey = iterator.next().value;
+      if (firstKey) {
+        sessionCache.delete(firstKey); // Remove oldest
+      }
+    }
+
+    return false;
   }
 }
 

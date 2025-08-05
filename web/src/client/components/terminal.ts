@@ -669,8 +669,22 @@ export class Terminal extends LitElement {
 
       // Ensure charWidth is valid before division
       const safeCharWidth = Number.isFinite(charWidth) && charWidth > 0 ? charWidth : 8; // Default char width
-      // Subtract 1 to prevent horizontal scrollbar due to rounding/border issues
-      const calculatedCols = Math.max(20, Math.floor(containerWidth / safeCharWidth)) - 1;
+
+      // Mobile-specific column calculation to ensure content fits viewport
+      let calculatedCols: number;
+      if (this.isMobile) {
+        // On mobile, be more conservative with columns to ensure text fits
+        // Account for padding and ensure we don't exceed viewport
+        const viewportWidth = window.innerWidth;
+        const effectiveWidth = Math.min(containerWidth, viewportWidth - 20); // 10px padding on each side
+        calculatedCols = Math.max(20, Math.floor(effectiveWidth / safeCharWidth) - 2); // Extra margin for safety
+        logger.debug(
+          `[Terminal] Mobile column calculation: viewport=${viewportWidth}, effective=${effectiveWidth}, cols=${calculatedCols}`
+        );
+      } else {
+        // Desktop: Subtract 1 to prevent horizontal scrollbar due to rounding/border issues
+        calculatedCols = Math.max(20, Math.floor(containerWidth / safeCharWidth)) - 1;
+      }
 
       // Apply constraints in order of priority:
       // 1. If user has manually selected a specific width (maxCols > 0), use that as the limit
@@ -1693,7 +1707,7 @@ export class Terminal extends LitElement {
       <div class="relative w-full h-full p-0 m-0">
         <div
           id="${TERMINAL_IDS.TERMINAL_CONTAINER}"
-          class="terminal-container w-full h-full overflow-hidden p-0 m-0"
+          class="terminal-container w-full h-full overflow-hidden p-0 m-0 ${this.isMobile ? 'mobile-terminal' : ''}"
           tabindex="0"
           contenteditable="false"
           style="${containerStyle}"

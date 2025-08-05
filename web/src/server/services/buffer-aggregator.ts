@@ -76,9 +76,17 @@ export class BufferAggregator {
   private remoteConnections: Map<string, RemoteWebSocketConnection> = new Map();
   private clientSubscriptions: Map<WebSocket, Map<string, () => void>> = new Map();
 
+  // Deduplication cache: sessionId -> recent message hashes
+  private messageCache: Map<string, Set<string>> = new Map();
+  private readonly MAX_CACHE_SIZE = 50; // Keep last 50 message hashes per session
+  private readonly CACHE_CLEANUP_INTERVAL = 60000; // Clean cache every minute
+
   constructor(config: BufferAggregatorConfig) {
     this.config = config;
     logger.log(`BufferAggregator initialized (HQ mode: ${config.isHQMode})`);
+
+    // Start cache cleanup interval
+    setInterval(() => this.cleanupMessageCache(), this.CACHE_CLEANUP_INTERVAL);
   }
 
   /**
@@ -209,6 +217,13 @@ export class BufferAggregator {
         (sessionId: string, snapshot: Parameters<TerminalManager['encodeSnapshot']>[0]) => {
           try {
             const buffer = this.config.terminalManager.encodeSnapshot(snapshot);
+
+            // Check for duplicate before encoding
+            if (this.isDuplicate(sessionId, buffer)) {
+              logger.debug(`Skipping duplicate buffer update for session ${sessionId}`);
+              return;
+            }
+
             const sessionIdBuffer = Buffer.from(sessionId, 'utf8');
             const totalLength = 1 + 4 + sessionIdBuffer.length + buffer.length;
             const fullBuffer = Buffer.allocUnsafe(totalLength);
@@ -426,6 +441,16 @@ export class BufferAggregator {
 
     const sessionId = buffer.subarray(5, 5 + sessionIdLength).toString('utf8');
 
+    // Extract the actual terminal data for deduplication
+    const terminalDataStart = 5 + sessionIdLength;
+    const terminalData = buffer.subarray(terminalDataStart);
+
+    // Check for duplicate
+    if (this.isDuplicate(sessionId, terminalData)) {
+      logger.debug(`Skipping duplicate remote buffer for session ${sessionId}`);
+      return;
+    }
+
     // Forward to all clients subscribed to this session
     let forwardedCount = 0;
     for (const [clientWs, subscriptions] of this.clientSubscriptions) {
@@ -509,5 +534,69 @@ export class BufferAggregator {
     }
     this.remoteConnections.clear();
     logger.debug(`Closed ${remoteCount} remote connections`);
+  }
+
+  /**
+   * Generate a hash for a buffer to use for deduplication
+   */
+  private generateBufferHash(buffer: Buffer): string {
+    // Use a simple hash based on length and some sample bytes
+    // This is fast and good enough for duplicate detection
+    const length = buffer.length;
+    const sample = buffer.slice(0, Math.min(50, length));
+    return `${length}-${sample.toString('hex')}`;
+  }
+
+  /**
+   * Check if a message is a duplicate
+   */
+  private isDuplicate(sessionId: string, buffer: Buffer): boolean {
+    const hash = this.generateBufferHash(buffer);
+
+    let sessionCache = this.messageCache.get(sessionId);
+    if (!sessionCache) {
+      sessionCache = new Set();
+      this.messageCache.set(sessionId, sessionCache);
+    }
+
+    if (sessionCache.has(hash)) {
+      logger.debug(`Duplicate buffer detected for session ${sessionId}`);
+      return true;
+    }
+
+    // Add to cache
+    sessionCache.add(hash);
+
+    // Maintain cache size limit
+    if (sessionCache.size > this.MAX_CACHE_SIZE) {
+      const iterator = sessionCache.values();
+      const firstKey = iterator.next().value;
+      if (firstKey) {
+        sessionCache.delete(firstKey); // Remove oldest
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Clean up old entries from message cache
+   */
+  private cleanupMessageCache(): void {
+    // Remove caches for sessions that no longer have any subscribers
+    for (const [sessionId] of this.messageCache.entries()) {
+      let hasSubscribers = false;
+      for (const [_, subscriptions] of this.clientSubscriptions) {
+        if (subscriptions.has(sessionId)) {
+          hasSubscribers = true;
+          break;
+        }
+      }
+
+      if (!hasSubscribers) {
+        this.messageCache.delete(sessionId);
+        logger.debug(`Cleaned up message cache for session ${sessionId}`);
+      }
+    }
   }
 }

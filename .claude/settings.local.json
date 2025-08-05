@@ -4,7 +4,8 @@
       "Bash(pnpm test:*)",
       "Bash(rg:*)",
       "Bash(./scripts/vtlog.sh:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(grep:*)"
     ],
     "deny": []
   },

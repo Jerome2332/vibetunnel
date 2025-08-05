@@ -1628,7 +1628,7 @@ export class VibeTunnelApp extends LitElement {
 
     // Expanded state
     if (isMobile) {
-      return `width: calc(100vw - ${SIDEBAR.MOBILE_RIGHT_MARGIN}px); z-index: ${Z_INDEX.SIDEBAR_MOBILE};`;
+      return `width: 100vw; z-index: ${Z_INDEX.SIDEBAR_MOBILE};`;
     }
 
     return `width: ${this.sidebarWidth}px;`;
@@ -1803,6 +1803,7 @@ export class VibeTunnelApp extends LitElement {
               .loading=${this.loading}
               .hideExited=${this.hideExited}
               .selectedSessionId=${this.selectedSessionId}
+              .activeSessionId=${this.selectedSessionId}
               .compactMode=${showSplitView}
               .collapsed=${this.sidebarCollapsed}
               .authClient=${authClient}

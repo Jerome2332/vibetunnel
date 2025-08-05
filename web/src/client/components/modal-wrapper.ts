@@ -85,6 +85,8 @@ export class ModalWrapper extends LitElement {
       return html``;
     }
 
+    console.log('Modal wrapper rendering - visible:', this.visible);
+
     const contentStyle = this.transitionName ? `view-transition-name: ${this.transitionName}` : '';
 
     return html`

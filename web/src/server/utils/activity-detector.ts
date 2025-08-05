@@ -81,9 +81,14 @@ export interface AppDetector {
 // Format 2: ✻ Measuring… (6s ·  100 tokens · esc to interrupt)
 // Format 3: ⏺ Calculating… (0s) - simpler format without tokens/interrupt
 // Format 4: ✳ Measuring… (120s · ⚒ 671 tokens · esc to interrupt) - with hammer symbol
+// Format 5: + Frolicking… (2s · ↓ 7 tokens · esc to interrupt) - with + symbol
 // Note: We match ANY non-whitespace character as the indicator since Claude uses many symbols
 const CLAUDE_STATUS_REGEX =
-  /(\S)\s+([\w\s]+?)…\s*\((\d+)s(?:\s*·\s*(\S?)\s*([\d.]+)\s*k?\s*tokens\s*·\s*[^)]+to\s+interrupt)?\)/gi;
+  /(\S)\s+([\w\s]+?)…\s*\((\d+)s(?:\s*·\s*([↑↓⚒]?)\s*([\d.]+)\s*k?\s*tokens\s*·\s*[^)]+to\s+interrupt)?\)/gi;
+
+// Additional regex to catch Claude's prompt-like status lines
+// Matches lines like: "+ Frolicking… (2s · ↓ 7 tokens · esc to interrupt)"
+const CLAUDE_STATUS_LINE_REGEX = /^[^\n]*[+✻⏺✳]\s+\w+…[^\n]*to\s+interrupt[^\n]*$/gim;
 
 /**
  * Parse Claude-specific status from output
@@ -146,43 +151,53 @@ function parseClaudeStatus(data: string): ActivityStatus | null {
   );
   logger.debug(`Full match: "${fullMatch}"`);
 
-  // Filter out the status line from output (need to search in original data with ANSI codes)
-  // First try to remove the exact match from the clean data position
-  const matchIndex = cleanData.indexOf(fullMatch);
+  // Filter out the status line from output
   let filteredData = data;
+  const originalLength = data.length;
+  const matchIndex = cleanData.indexOf(fullMatch);
+
+  // Method 1: Try to remove using the line-based regex (most reliable)
+  const beforeMethod1 = filteredData.length;
+  filteredData = filteredData.replace(CLAUDE_STATUS_LINE_REGEX, '');
+  if (beforeMethod1 !== filteredData.length) {
+    superDebug(`Method 1 removed ${beforeMethod1 - filteredData.length} chars`);
+  }
+
+  // Method 2: Also try to remove based on the parsed match
   if (matchIndex >= 0) {
-    // Find corresponding position in original data
-    let originalPos = 0;
-    let cleanPos = 0;
-    while (cleanPos < matchIndex && originalPos < data.length) {
-      if (data.startsWith('\x1b[', originalPos)) {
-        // Skip ANSI sequence
-        // biome-ignore lint/suspicious/noControlCharactersInRegex: ANSI escape codes need control characters
-        const endMatch = /^\x1b\[[0-9;]*[a-zA-Z]/.exec(data.substring(originalPos));
-        if (endMatch) {
-          originalPos += endMatch[0].length;
-        } else {
-          originalPos++;
-        }
-      } else {
-        originalPos++;
-        cleanPos++;
+    // Look for lines containing the indicator and "interrupt"
+    const lines = filteredData.split('\n');
+    const beforeMethod2 = lines.length;
+    const filteredLines = lines.filter((line) => {
+      const cleanLine = line.replace(ANSI_REGEX, '');
+      // Remove any line that contains the status pattern
+      const shouldRemove =
+        cleanLine.includes(indicator) && cleanLine.includes('…') && cleanLine.includes('interrupt');
+      if (shouldRemove) {
+        superDebug(`Method 2 removing line: "${cleanLine}"`);
       }
+      return !shouldRemove;
+    });
+    filteredData = filteredLines.join('\n');
+    if (beforeMethod2 !== filteredLines.length) {
+      superDebug(`Method 2 removed ${beforeMethod2 - filteredLines.length} lines`);
     }
-    // Now try to remove the status line from around this position
-    const before = data.substring(0, Math.max(0, originalPos - 10));
-    const after = data.substring(originalPos + fullMatch.length + 50);
-    const middle = data.substring(
-      Math.max(0, originalPos - 10),
-      originalPos + fullMatch.length + 50
-    );
-    // Look for the status pattern in the middle section
-    const statusPattern = new RegExp(
-      `[^\n]*${escapeRegex(indicator)}[^\n]*to\\s+interrupt[^\n]*`,
-      'gi'
-    );
-    const cleanedMiddle = middle.replace(statusPattern, '');
-    filteredData = before + cleanedMiddle + after;
+  }
+
+  // Method 3: Final cleanup - remove any remaining status patterns
+  const statusPattern = new RegExp(
+    `[^\n]*${escapeRegex(indicator)}[^\n]*…[^\n]*interrupt[^\n]*`,
+    'gi'
+  );
+  const beforeMethod3 = filteredData.length;
+  filteredData = filteredData.replace(statusPattern, '');
+  if (beforeMethod3 !== filteredData.length) {
+    superDebug(`Method 3 removed ${beforeMethod3 - filteredData.length} chars`);
+  }
+
+  superDebug(`Total filtering: ${originalLength} -> ${filteredData.length} chars`);
+  if (originalLength !== filteredData.length && CLAUDE_DEBUG) {
+    logger.debug(`Filtered Claude status: removed ${originalLength - filteredData.length} chars`);
   }
 
   // Create compact display text for title bar

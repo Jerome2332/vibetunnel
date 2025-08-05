@@ -83,15 +83,16 @@ export class MobileActionBar extends LitElement {
   @state() private isIOS = isIOS();
 
   private readonly primaryActions: ActionButton[] = [
-    {
-      id: 'command-palette',
-      title: 'Command Palette',
-      icon: '⚡',
-      action: 'showCommandPalette', // Internal action to show modal
-      shortcut: 'Ctrl+Shift+P',
-      highlight: true,
-      category: 'primary',
-    },
+    // Temporarily disabled - no functionality yet
+    // {
+    //   id: 'command-palette',
+    //   title: 'Command Palette',
+    //   icon: '⚡',
+    //   action: 'showCommandPalette', // Internal action to show modal
+    //   shortcut: 'Ctrl+Shift+P',
+    //   highlight: true,
+    //   category: 'primary',
+    // },
     {
       id: 'clipboard',
       title: 'Clipboard',
@@ -100,14 +101,15 @@ export class MobileActionBar extends LitElement {
       longPressAction: 'onPasteFromClipboard',
       category: 'primary',
     },
-    {
-      id: 'slash-commands',
-      title: 'Slash Commands',
-      icon: '/',
-      action: 'showSlashCommands', // Internal action to show modal
-      highlight: true,
-      category: 'primary',
-    },
+    // Temporarily disabled - no functionality yet
+    // {
+    //   id: 'slash-commands',
+    //   title: 'Slash Commands',
+    //   icon: '/',
+    //   action: 'showSlashCommands', // Internal action to show modal
+    //   highlight: true,
+    //   category: 'primary',
+    // },
     {
       id: 'keyboard',
       title: 'Keyboard',
@@ -217,23 +219,25 @@ export class MobileActionBar extends LitElement {
   }
 
   private handleButtonPress(button: ActionButton, event: PointerEvent) {
+    console.log(`[MOBILE-ACTION-BAR] handleButtonPress called for: ${button.id}`);
     event.preventDefault();
     event.stopPropagation();
 
     logger.debug(`Button pressed: ${button.id}`);
+    console.log(`[MOBILE-ACTION-BAR] Button pressed: ${button.id}`);
     this.triggerHaptic('light');
 
-    // Handle long press for buttons that support it
-    if (button.longPressAction) {
-      this.longPressTimer = window.setTimeout(() => {
+    // Set timer for all buttons - we'll check for long press action in the timeout
+    this.longPressTimer = window.setTimeout(() => {
+      // This timeout means it's a long press
+      if (button.longPressAction) {
         logger.debug(`Long press action: ${button.longPressAction}`);
+        console.log(`[MOBILE-ACTION-BAR] Long press action: ${button.longPressAction}`);
         this.triggerHaptic('medium');
-        if (button.longPressAction) {
-          this.executeAction(button.longPressAction);
-        }
-        this.longPressTimer = null;
-      }, 500); // 500ms long press
-    }
+        this.executeAction(button.longPressAction);
+      }
+      this.longPressTimer = null;
+    }, 500); // 500ms long press
   }
 
   private handleButtonRelease(button: ActionButton, event: PointerEvent) {
@@ -303,14 +307,23 @@ export class MobileActionBar extends LitElement {
 
     // Execute callback if available (only for actual callback actions)
     if (typeof action === 'string' && action.startsWith('on')) {
+      console.log(`[MOBILE-ACTION-BAR] Looking for callback: ${action}`);
+      console.log(`[MOBILE-ACTION-BAR] Callbacks available:`, this.callbacks ? Object.keys(this.callbacks) : 'none');
+      
       const callback = this.callbacks?.[action as keyof MobileActionBarCallbacks];
+      console.log(`[MOBILE-ACTION-BAR] Callback found:`, !!callback, typeof callback);
+      
       if (callback && typeof callback === 'function') {
+        console.log(`[MOBILE-ACTION-BAR] Executing callback: ${action}`);
         // Handle callbacks that require parameters
         if (action === 'onTriggerHaptic') {
           (callback as (type: 'light' | 'medium' | 'heavy') => void)('light');
         } else {
           (callback as () => void)();
         }
+        console.log(`[MOBILE-ACTION-BAR] Callback executed: ${action}`);
+      } else {
+        console.log(`[MOBILE-ACTION-BAR] No callback found for action: ${action}`);
       }
     }
   }

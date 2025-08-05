@@ -1418,7 +1418,8 @@ export class SessionView extends LitElement {
             .session=${this.session}
             .keyboardVisible=${uiState.showQuickKeys}
             .currentMode=${'normal'}
-            .callbacks=${{
+            .callbacks=${(() => {
+              const callbacks = {
               // Command palette callbacks
               onTogglePlanMode: () => this.handleClaudeModeToggle('plan'),
               onToggleAutoAccept: () => this.handleClaudeModeToggle('auto-accept'),
@@ -1456,7 +1457,11 @@ export class SessionView extends LitElement {
               onSendInput: (text: string) => this.handleSendInput(text),
               onTriggerHaptic: (type: 'light' | 'medium' | 'heavy') =>
                 this.handleHapticFeedback(type),
-            }}
+              };
+              console.log('[SESSION-VIEW] Passing callbacks to mobile-action-bar:', Object.keys(callbacks));
+              console.log('[SESSION-VIEW] onShowKeyboard callback exists:', !!callbacks.onShowKeyboard);
+              return callbacks;
+            })()}
           ></mobile-action-bar>
         `
             : html`

@@ -117,7 +117,12 @@ export class DirectKeyboardManager extends ManagerEventEmitter {
   }
 
   focusHiddenInput(): void {
+    console.log('[DirectKeyboardManager] focusHiddenInput called');
     logger.log('Entering keyboard mode');
+    
+    // Check if hidden input exists
+    console.log('[DirectKeyboardManager] Hidden input exists:', !!this.hiddenInput);
+    console.log('[DirectKeyboardManager] Hidden input in DOM:', this.hiddenInput ? document.body.contains(this.hiddenInput) : false);
 
     // Enter keyboard mode
     this.keyboardMode = true;
@@ -201,12 +206,15 @@ export class DirectKeyboardManager extends ManagerEventEmitter {
 
     // Now that we're in keyboard mode, focus the input synchronously
     if (this.hiddenInput && this.keyboardMode) {
+      console.log('[DirectKeyboardManager] About to focus hidden input');
       // Make sure input is visible and ready
       this.hiddenInput.style.display = 'block';
       this.hiddenInput.style.visibility = 'visible';
 
       // Focus synchronously - critical for iOS Safari
+      console.log('[DirectKeyboardManager] Calling focus() on hidden input');
       this.hiddenInput.focus();
+      console.log('[DirectKeyboardManager] Focus called, activeElement is:', document.activeElement === this.hiddenInput ? 'hidden input' : document.activeElement?.tagName);
 
       // Set a dummy value and select it to help trigger iOS keyboard
       // This helps iOS recognize that we want to show the keyboard
@@ -225,6 +233,7 @@ export class DirectKeyboardManager extends ManagerEventEmitter {
   }
 
   private createHiddenInput(): void {
+    console.log('[DirectKeyboardManager] Creating hidden input');
     this.hiddenInput = document.createElement('input');
     this.hiddenInput.type = 'text';
     this.hiddenInput.style.position = 'absolute';
@@ -444,6 +453,7 @@ export class DirectKeyboardManager extends ManagerEventEmitter {
 
     // Add to the body for debugging (so it's always visible)
     document.body.appendChild(this.hiddenInput);
+    console.log('[DirectKeyboardManager] Hidden input created and appended to DOM');
   }
 
   handleQuickKeyPress = async (

@@ -8,6 +8,7 @@
       "enabled": true,
       "buildCommand": "cd mac && ./scripts/build.sh --configuration Debug",
       "outputPath": "./mac/build/Debug/VibeTunnel.app",
+      "bundleId": "sh.vibetunnel.vibetunnel",
       "watchPaths": [
         "mac/**/*.swift",
         "mac/**/*.xcodeproj/**",
@@ -27,6 +28,7 @@
       "enabled": false,
       "buildCommand": "cd ios && xcodebuild -project VibeTunnel-iOS.xcodeproj -scheme VibeTunnel-iOS -sdk iphonesimulator build",
       "outputPath": "./ios/build/Debug-iphonesimulator/VibeTunnel.app",
+      "bundleId": "sh.vibetunnel.vibetunnel.ios",
       "watchPaths": [
         "ios/**/*.swift",
         "ios/**/*.xcodeproj/**",

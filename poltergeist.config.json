@@ -1,0 +1,110 @@
+{
+  "version": "1.0",
+  "projectType": "multi-platform",
+  "targets": [
+    {
+      "name": "vibetunnel-mac",
+      "type": "app-bundle",
+      "enabled": true,
+      "buildCommand": "cd mac && ./scripts/build.sh --configuration Debug",
+      "outputPath": "./mac/build/Debug/VibeTunnel.app",
+      "watchPaths": [
+        "mac/**/*.swift",
+        "mac/**/*.xcodeproj/**",
+        "mac/**/*.xcconfig",
+        "mac/**/*.entitlements",
+        "mac/**/*.plist"
+      ],
+      "settlingDelay": 1500,
+      "debounceInterval": 3000,
+      "environment": {
+        "CONFIGURATION": "Debug"
+      }
+    },
+    {
+      "name": "vibetunnel-web",
+      "type": "executable",
+      "enabled": true,
+      "buildCommand": "cd web && pnpm run build",
+      "outputPath": "./web/dist/server/server.js",
+      "watchPaths": [
+        "web/src/**/*.ts",
+        "web/src/**/*.js",
+        "web/src/**/*.css",
+        "web/src/**/*.html",
+        "web/package.json",
+        "web/tsconfig.json",
+        "web/vite.config.ts"
+      ],
+      "settlingDelay": 1000,
+      "debounceInterval": 2000,
+      "environment": {
+        "NODE_ENV": "development"
+      }
+    },
+    {
+      "name": "vibetunnel-ios",
+      "type": "app-bundle",
+      "enabled": false,
+      "buildCommand": "cd ios && xcodebuild -project VibeTunnel-iOS.xcodeproj -scheme VibeTunnel-iOS -sdk iphonesimulator build",
+      "outputPath": "./ios/build/Debug-iphonesimulator/VibeTunnel.app",
+      "watchPaths": [
+        "ios/**/*.swift",
+        "ios/**/*.xcodeproj/**",
+        "ios/**/*.xcconfig",
+        "ios/**/*.entitlements",
+        "ios/**/*.plist"
+      ],
+      "settlingDelay": 1500,
+      "debounceInterval": 3000
+    }
+  ],
+  "watchman": {
+    "useDefaultExclusions": true,
+    "excludeDirs": [
+      "node_modules",
+      "dist",
+      "build",
+      "DerivedData",
+      ".git",
+      ".poltergeist",
+      "coverage",
+      ".next",
+      "out"
+    ],
+    "projectType": "multi-platform",
+    "maxFileEvents": 10000,
+    "recrawlThreshold": 5,
+    "settlingDelay": 1000
+  },
+  "buildScheduling": {
+    "parallelization": 2,
+    "prioritization": {
+      "enabled": true,
+      "focusDetectionWindow": 300000,
+      "priorityDecayTime": 1800000,
+      "buildTimeoutMultiplier": 2.0
+    }
+  },
+  "notifications": {
+    "enabled": true,
+    "buildStart": false,
+    "buildSuccess": true,
+    "buildFailed": true,
+    "successSound": "Glass",
+    "failureSound": "Basso",
+    "icon": "./mac/VibeTunnel/Assets.xcassets/AppIcon.appiconset/icon_128x128.png"
+  },
+  "performance": {
+    "profile": "balanced",
+    "autoOptimize": true,
+    "metrics": {
+      "enabled": true,
+      "reportInterval": 300
+    }
+  },
+  "logging": {
+    "level": "info",
+    "file": ".poltergeist.log"
+  }
+}

@@ -164,3 +164,9 @@ mac/build-test/
 .aider*
 /.crush
 /.grok
+
+# Poltergeist
+.poltergeist.log
+.poltergeist/
+/tmp/poltergeist/
+.watchmanconfig
